@@ -1,6 +1,8 @@
 import logging
 from typing import Optional
 
+from psycopg2._psycopg import DatabaseError
+
 from psql_helper import PostgreSQL
 
 
@@ -10,20 +12,16 @@ class StorageService(object):
     def __init__(self):
         pass
 
-    def create(self, sql: str, data: tuple, is_return_field: bool = False, return_field_name: str = None,
-               is_commit: bool = True) -> None:
+    def create(self, sql: str, data: tuple, is_return: bool = False) -> None:
         pass
 
-    def get(self, sql: str, data: tuple = None, is_return_field: bool = False, return_field_name: str = None) -> dict:
+    def get(self, sql: str, data: tuple = None) -> dict:
         pass
 
-    def update(self, sql: str, data: tuple, is_commit: bool = True) -> None:
+    def update(self, sql: str, data: tuple, is_return: bool = False) -> None:
         pass
 
-    def delete(self, sql: str, data: tuple, is_commit: bool = True) -> None:
-        pass
-
-    def commit(self):
+    def delete(self, sql: str, data: tuple) -> None:
         pass
 
     def rollback(self):
@@ -46,34 +44,30 @@ class DBStorageService(StorageService):
         super().__init__()
         self._psql = psql
 
-    def create(self, sql: str, data: tuple, is_return_field: bool = False, return_field_name: str = None,
-               is_commit: bool = True) -> None:
+    def create(self, sql: str, data: tuple, is_return: bool = False) -> Optional[list]:
         logging.debug('create method.')
-        id = self.__execute_sql(sql=sql, data=data, is_return_field=is_return_field,
-                                return_field_name=return_field_name, is_commit=is_commit)
-        return id
+        data = self.__execute_sql(sql=sql, data=data, is_return=is_return)
+        if is_return:
+            return data
 
-    def get(self, sql: str, data: tuple = None, is_return_field: bool = False,
-            return_field_name: str = None) -> Optional[dict]:
+    def get(self, sql: str, data: tuple = None) -> Optional[dict]:
         logging.debug('get method.')
-        data = self.__execute_sql(sql=sql, data=data, is_return_field=is_return_field,
-                                  return_field_name=return_field_name, is_return=True)
-        if not is_return_field:
-            logging.debug("Fetch size rows: " + str(len(data)))
-        else:
-            logging.debug("Return field %s = %s" % (return_field_name, str(data)))
+        data = self.__execute_sql(sql=sql, data=data, is_return=True)
+        logging.debug("Fetch size rows: " + str(len(data)))
         return data
 
-    def update(self, sql: str, data: tuple, is_commit: bool = True) -> None:
+    def update(self, sql: str, data: tuple, is_return: bool = False) -> Optional[list]:
         logging.debug('update method.')
-        self.__execute_sql(sql=sql, data=data, is_commit=is_commit)
+        self.__execute_sql(sql=sql, data=data, is_return=is_return)
+        data = self.__execute_sql(sql=sql, data=data, is_return=is_return)
+        if is_return:
+            return data
 
-    def delete(self, sql: str, data: tuple, is_commit: bool = True) -> None:
+    def delete(self, sql: str, data: tuple) -> None:
         logging.debug('delete method.')
-        self.__execute_sql(sql=sql, data=data, is_commit=is_commit)
+        self.__execute_sql(sql=sql, data=data, is_return=False)
 
-    def __execute_sql(self, sql: str, data: tuple = None, is_return_field: bool = False, return_field_name: str = None,
-                      is_commit: bool = True, is_return: bool = False) -> Optional[list]:
+    def __execute_sql(self, sql: str, is_return: bool, data: tuple = None) -> Optional[list]:
         logging.debug('__execute_sql method.')
         sql = sql.replace("?", "%s")
         log_txt = "\nSQL: %s\nParameters: %s " % (sql, data)
@@ -83,10 +77,7 @@ class DBStorageService(StorageService):
             with self._psql.cursor() as cursor:
                 logging.debug("Executing...")
                 cursor.execute(sql, data)
-                if is_return_field:
-                    response = cursor.fetchone()[return_field_name]
-                    return response
-                elif is_return:
+                if is_return:
                     response = cursor.fetchall()
                     return response
                 else:
