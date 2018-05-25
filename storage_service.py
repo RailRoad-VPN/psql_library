@@ -28,6 +28,19 @@ class StorageService(object):
         pass
 
 
+class StoredObject(object):
+    __version__ = 1
+
+    _storage_service = None
+    _limit = None
+    _offset = None
+
+    def __init__(self, storage_service: StorageService, limit: int = None, offset: int = None):
+        self._limit = limit
+        self._offset = offset
+        self._storage_service = storage_service
+
+
 class DBStorageService(StorageService):
     __version__ = 1
 
