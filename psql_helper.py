@@ -97,7 +97,7 @@ class PostgreSQL(object):
         user = flask.current_app.config["PSQL_USER"]
         password = flask.current_app.config["PSQL_PASSWORD"]
         host = flask.current_app.config["PSQL_HOST"]
-        self.logger.debug("connecting dbname=%s, user=%s, pwd=%s, host=%s" % (dbname, user, "REMOVED", host))
+        self.logger.debug(f"connecting dbname: {dbname}, user: {user}, pwd: REMOVED, host: {host}")
         c = psycopg2.connect(dbname=dbname, user=user, password=password, host=host,
                              connection_factory=PostgreSQLConnection)
         return c
