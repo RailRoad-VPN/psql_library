@@ -76,7 +76,7 @@ class DBStorageService(StorageService):
         if is_return:
             return data
 
-    def delete(self, sql: str, data: tuple) -> None:
+    def delete(self, sql: str, data: tuple = None) -> None:
         logging.debug('delete method.')
         self.__execute_sql(sql=sql, data=data, is_return=False)
 
