@@ -31,6 +31,8 @@ class StorageService(object):
 class StoredObject(object):
     __version__ = 1
 
+    logger = logging.getLogger(__name__)
+
     _storage_service = None
     _limit = None
     _offset = None
@@ -43,6 +45,8 @@ class StoredObject(object):
 
 class DBStorageService(StorageService):
     __version__ = 1
+
+    logger = logging.getLogger(__name__)
 
     __dbname = None
     __dbuser = None
@@ -58,37 +62,37 @@ class DBStorageService(StorageService):
         self._psql = psql
 
     def create(self, sql: str, data: tuple, is_return: bool = False) -> Optional[list]:
-        logging.debug('create method.')
+        self.logger.debug('create method.')
         data = self.__execute_sql(sql=sql, data=data, is_return=is_return)
         if is_return:
             return data
 
     def get(self, sql: str, data: tuple = None) -> Optional[dict]:
-        logging.debug('get method.')
+        self.logger.debug('get method.')
         data = self.__execute_sql(sql=sql, data=data, is_return=True)
-        logging.debug("Fetch size rows: " + str(len(data)))
+        self.logger.debug("Fetch size rows: " + str(len(data)))
         return data
 
     def update(self, sql: str, data: tuple, is_return: bool = False) -> Optional[list]:
-        logging.debug('update method.')
+        self.logger.debug('update method.')
         self.__execute_sql(sql=sql, data=data, is_return=is_return)
         data = self.__execute_sql(sql=sql, data=data, is_return=is_return)
         if is_return:
             return data
 
     def delete(self, sql: str, data: tuple = None) -> None:
-        logging.debug('delete method.')
+        self.logger.debug('delete method.')
         self.__execute_sql(sql=sql, data=data, is_return=False)
 
     def __execute_sql(self, sql: str, is_return: bool, data: tuple = None) -> Optional[list]:
-        logging.debug('__execute_sql method.')
+        self.logger.debug('__execute_sql method.')
         sql = sql.replace("?", "%s")
         log_txt = "\nSQL: %s\nParameters: %s " % (sql, data)
-        logging.debug(log_txt)
-        logging.debug("Create cursor")
+        self.logger.debug(log_txt)
+        self.logger.debug("Create cursor")
         try:
             with self._psql.cursor() as cursor:
-                logging.debug("Executing...")
+                self.logger.debug("Executing...")
                 cursor.execute(sql, data)
                 if is_return:
                     response = cursor.fetchall()

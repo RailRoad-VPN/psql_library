@@ -9,6 +9,11 @@ import psycopg2.extensions
 import psycopg2.extras
 from werkzeug.local import LocalProxy
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
 postgres = LocalProxy(lambda: flask.current_app.postgres)
 
 
