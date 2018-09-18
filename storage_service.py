@@ -70,7 +70,7 @@ class DBStorageService(StorageService):
     def get(self, sql: str, data: tuple = None) -> Optional[dict]:
         self.logger.debug('get method.')
         data = self.__execute_sql(sql=sql, data=data, is_return=True)
-        self.logger.debug("Fetch size rows: " + str(len(data)))
+        self.logger.debug(f"{self.__class__}: Fetch size rows: " + str(len(data)))
         return data
 
     def update(self, sql: str, data: tuple, is_return: bool = False) -> Optional[list]:
@@ -89,10 +89,10 @@ class DBStorageService(StorageService):
         sql = sql.replace("?", "%s")
         log_txt = "\nSQL: %s\nParameters: %s " % (sql, data)
         self.logger.debug(log_txt)
-        self.logger.debug("Create cursor")
+        self.logger.debug(f"{self.__class__}: Create cursor")
         try:
             with self._psql.cursor() as cursor:
-                self.logger.debug("Executing...")
+                self.logger.debug(f"{self.__class__}: Executing...")
                 cursor.execute(sql, data)
                 if is_return:
                     response = cursor.fetchall()

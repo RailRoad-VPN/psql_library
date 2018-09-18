@@ -11,7 +11,7 @@ from werkzeug.local import LocalProxy
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='PSQL_LIB: %(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
 postgres = LocalProxy(lambda: flask.current_app.postgres)
@@ -72,7 +72,7 @@ class PostgreSQL(object):
                     # This tests if the connection is still alive.
                     c.reset()
                 except psycopg2.OperationalError:
-                    self.logger.debug("assuming pool dead", exc_info=True)
+                    self.logger.debug(f"{self.__class__}: assuming pool dead", exc_info=True)
 
                     # assume that the entire pool is dead
                     try:
@@ -89,7 +89,7 @@ class PostgreSQL(object):
                     self._pool = []
                     c = None
                 else:
-                    self.logger.debug("got connection from pool")
+                    self.logger.debug(f"{self.__class__}: got connection from pool")
 
             if c is None:
                 c = self._new_connection()
@@ -102,7 +102,7 @@ class PostgreSQL(object):
         user = flask.current_app.config["PSQL_USER"]
         password = flask.current_app.config["PSQL_PASSWORD"]
         host = flask.current_app.config["PSQL_HOST"]
-        self.logger.debug(f"connecting dbname: {dbname}, user: {user}, pwd: REMOVED, host: {host}")
+        self.logger.debug(f"{self.__class__}: connecting dbname: {dbname}, user: {user}, pwd: REMOVED, host: {host}")
         c = psycopg2.connect(dbname=dbname, user=user, password=password, host=host,
                              connection_factory=PostgreSQLConnection)
         return c
@@ -150,7 +150,7 @@ class PostgreSQL(object):
         """
         with self.app.app_context():
             if hasattr(self.app, '_postgresql'):
-                self.logger.debug("committing")
+                self.logger.debug(f"{self.__class__}: committing")
                 self.app._postgresql.commit()
             return response
 
@@ -164,10 +164,10 @@ class PostgreSQL(object):
             with self._lock:
                 s = len(self._pool)
                 if s >= self.pool_size:
-                    self.logger.debug("teardown: pool size %i - closing", s)
+                    self.logger.debug(f"{self.__class__}: teardown: pool size %i - closing", s)
                     c.close()
                 else:
-                    self.logger.debug("teardown: adding to pool, new size %i",
+                    self.logger.debug(f"{self.__class__}: teardown: adding to pool, new size %i",
                                       s + 1)
                     c.reset()
                     self._pool.append(c)
